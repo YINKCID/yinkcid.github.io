@@ -1,12 +1,152 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Trang web đầu tiên của YINKCID</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YINKCID</title>
+<style>
+body { font-family: Arial, sans-serif; margin: 0; padding: 0; text-align: center; background: #f0f0f0; }
+header { background: #ff4500; color: white; padding: 10px; font-size: 24px; font-weight: bold; }
+.message { text-align:center; font-weight:bold; color:#ff4500; font-size:18px; margin:5px 0;}
+.tabs { display: flex; justify-content: center; margin: 10px 0; cursor: pointer; flex-wrap: wrap; }
+.tab { padding: 10px 20px; border: 1px solid #ccc; background: white; margin: 0 5px; border-radius: 5px; }
+.tab.active { background: #ff4500; color: white; font-weight: bold; }
+.content { display: none; padding: 10px; }
+.content.active { display: block; }
+.media-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
+.card { background: white; padding: 5px; border-radius: 5px; box-shadow: 0 0 5px #aaa; }
+.card img, .card video { width: 100%; border-radius: 5px; }
+.info { text-align: left; font-size: 14px; margin-top: 5px; }
+.like, .comment-btn { cursor: pointer; color: #ff4500; margin-right: 10px; }
+.comment-section { margin-top: 5px; }
+.comment-input { width: 80%; padding: 5px; }
+.comment-submit { padding: 5px 10px; cursor: pointer; }
+#login-form, #upload-form { margin: 10px auto; padding: 10px; background: #fff; border-radius: 5px; width: 300px; box-shadow: 0 0 5px #aaa; }
+#upload-form { display: none; }
+</style>
 </head>
 <body>
-  <h1>Chào mừng đến với trang web đầu tiên của YINKCID!</h1>
-  <p>Trang này được tạo bằng GitHub Pages 🎉</p>
-</body>
-</html>
+
+<header>Chào mừng đến với YINKCID!</header>
+
+<div class="message">Các bạn hãy đăng ký kênh để ủng hộ kênh của mình nhé.</div>
+<div class="message">Các bạn hãy đăng ký kênh để ủng hộ kênh của mình nhé.</div>
+
+<!-- Form đăng nhập / tạo tài khoản -->
+<div id="login-form">
+  <h3>Đăng nhập / Tạo tài khoản</h3>
+  <input type="text" id="username" placeholder="Tên" required><br><br>
+  <input type="email" id="email" placeholder="Email" required><br><br>
+  <input type="password" id="password" placeholder="Mật khẩu (6 ký tự chữ/số)" required><br><br>
+  <button onclick="login()">Đăng nhập</button>
+</div>
+
+<!-- Form upload (chỉ chủ sở hữu) -->
+<div id="upload-form">
+  <h3>Upload ảnh / video</h3>
+  <input type="file" id="media-file" accept="image/*,video/*"><br><br>
+  <button onclick="uploadMedia()">Upload</button>
+</div>
+
+<!-- Tabs -->
+<div class="tabs" id="tabs-container">
+  <div class="tab active" onclick="openTab('hot')">Hot Trend</div>
+  <div class="tab" onclick="openTab('video')">Video</div>
+  <div class="tab" onclick="openTab('image')">Ảnh</div>
+</div>
+
+<!-- Contents -->
+<div id="hot" class="content active"><div class="media-grid" id="hot-grid"></div></div>
+<div id="video" class="content"><div class="media-grid" id="video-grid"></div></div>
+<div id="image" class="content"><div class="media-grid" id="image-grid"></div></div>
+
+<script>
+// Tài khoản chủ sở hữu
+const ownerAccount = {name:"YINKCID", email:"yinkcid@gmail.com", password:"213206"};
+let currentUser = null;
+let mediaList = []; // {id,type,src,title,likes,comments:[],timestamp}
+
+// Mở tab
+function openTab(tabName){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Kiểm tra mật khẩu
+function isValidPassword(pw){ return /^[a-zA-Z0-9]{6}$/.test(pw); }
+
+// Đăng nhập
+function login(){
+  const name=document.getElementById('username').value;
+  const email=document.getElementById('email').value;
+  const password=document.getElementById('password').value;
+  if(!isValidPassword(password)){ alert("Mật khẩu không hợp lệ!"); return; }
+  currentUser={name,email,password};
+  document.getElementById('login-form').style.display="none";
+  if(email===ownerAccount.email && password===ownerAccount.password){
+    document.getElementById('upload-form').style.display="block";
+    addOwnerTab();
+  }
+  alert("Đăng nhập thành công! Chào "+name);
+  renderAll();
+}
+
+// Thêm tab Upload cho chủ sở hữu
+function addOwnerTab(){
+  const tabsContainer = document.getElementById('tabs-container');
+  const uploadTab = document.createElement('div');
+  uploadTab.className='tab';
+  uploadTab.innerText='Upload / Thư viện';
+  uploadTab.onclick = ()=>{ openTab('upload-content'); }
+  tabsContainer.appendChild(uploadTab);
+
+  const uploadContent = document.createElement('div');
+  uploadContent.id='upload-content';
+  uploadContent.className='content';
+  uploadContent.innerHTML=`<div style="margin-top:10px;">Sử dụng form upload phía trên để thêm media.</div>`;
+  document.body.appendChild(uploadContent);
+}
+
+// Upload media
+function uploadMedia(){
+  const file = document.getElementById('media-file').files[0];
+  if(!file){ alert("Chọn file!"); return; }
+  const type = file.type.startsWith('video') ? "video":"image";
+  const src = URL.createObjectURL(file);
+  const title = file.name;
+  mediaList.push({id:Date.now(),type,src,title,likes:0,comments:[],timestamp:new Date()});
+  renderAll();
+}
+
+// Render tất cả
+function renderAll(){
+  renderGrid('hot','hot-grid',true);
+  renderGrid('video','video-grid',false,'video');
+  renderGrid('image','image-grid',false,'image');
+}
+
+// Render từng grid
+function renderGrid(tabId,gridId,isHot=false,filterType=null){
+  const grid=document.getElementById(gridId);
+  grid.innerHTML="";
+  let list=[...mediaList];
+  const now = new Date();
+  if(isHot){
+    list=list.filter(m=>m.type==='video' && (now-m.timestamp)/(1000*60*60*24)<=30);
+    list.sort((a,b)=>(b.likes+b.comments.length)-(a.likes+a.comments.length));
+  } else if(filterType){ list=list.filter(m=>m.type===filterType); list.sort((a,b)=>b.timestamp-a.timestamp); }
+  list.forEach(m=>{
+    const card=document.createElement('div'); card.className='card';
+    if(m.type==='video'){ const v=document.createElement('video'); v.src=m.src; v.controls=true; v.width="100%"; card.appendChild(v);}
+    else { const img=document.createElement('img'); img.src=m.src; card.appendChild(img);}
+    const info=document.createElement('div'); info.className='info';
+    info.innerHTML=`<b>${m.title}</b><br>Ngày: ${m.timestamp.toLocaleDateString()}<br>
+      <span class="like" onclick="likeMedia(${m.id})">❤️ ${m.likes}</span>
+      <span class="comment-btn" onclick="toggleComment(${m.id})">💬 ${m.comments.length}</span>`;
+    card.appendChild(info);
+    const commentDiv=document.createElement('div'); commentDiv.id='comment-'+m.id; commentDiv.className='comment-section'; commentDiv.style.display='none';
+    commentDiv.innerHTML=`<input class="comment-input" id="input-${m.id}" placeholder="Viết bình luận...">
+      <button class="comment-submit" onclick="addComment(${m.id})">
+
