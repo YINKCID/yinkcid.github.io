@@ -5,29 +5,30 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YINKCID</title>
 <style>
-body { font-family: Arial; margin:0; padding:0; background:#f0f0f0; text-align:center; }
-header { background:#ff4500; color:#fff; padding:12px; font-size:22px; font-weight:bold; }
-.message { color:#ff4500; font-weight:bold; font-size:18px; margin:6px 0; }
+body { font-family: Arial; margin:0; padding:0; background:#000; color:#fff; text-align:center; }
+header { background:#4B0082; color:#fff; padding:12px; font-size:22px; font-weight:bold; }
+.message { color:#DA70D6; font-weight:bold; font-size:18px; margin:6px 0; }
 .container { padding:12px; }
-#auth-box, #upload-form { background:#fff; width:340px; margin:10px auto; padding:12px; border-radius:8px; box-shadow:0 0 6px #aaa; text-align:left; }
-#auth-box input, #upload-form input { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; }
+#auth-box, #upload-form { background:#111; width:340px; margin:10px auto; padding:12px; border-radius:8px; box-shadow:0 0 6px #444; text-align:left; }
+#auth-box input, #upload-form input { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; border-radius:4px; }
 #auth-actions { display:flex; gap:8px; justify-content:center; margin-top:6px; }
-button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #ccc; background:#fff; }
-button.primary { background:#ff4500; color:#fff; border-color:#ff4500; }
+button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #555; background:#4B0082; color:#fff; }
+button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
 .tabs { display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
-.tab { padding:8px 16px; background:#fff; border-radius:6px; border:1px solid #ccc; cursor:pointer; }
-.tab.active { background:#ff4500; color:#fff; font-weight:bold; border-color:#ff4500; }
+.tab { padding:8px 16px; background:#222; border-radius:6px; border:1px solid #555; cursor:pointer; }
+.tab.active { background:#4B0082; color:#fff; font-weight:bold; border-color:#4B0082; }
 .content { display:none; padding:10px; }
 .content.active { display:block; }
 .media-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; }
-.card { background:#fff; padding:8px; border-radius:6px; box-shadow:0 0 5px #bbb; text-align:left; cursor:pointer; }
+.card { background:#111; padding:8px; border-radius:6px; box-shadow:0 0 5px #444; text-align:left; cursor:pointer; }
 .card img, .card video { width:100%; border-radius:6px; display:block; }
-.info { font-size:13px; margin-top:6px; }
-.interactive { color:#ff4500; cursor:pointer; margin-right:8px; }
+.info { font-size:13px; margin-top:6px; color:#ccc; }
+.interactive { color:#DA70D6; cursor:pointer; margin-right:8px; }
 .comment-section { margin-top:6px; display:none; }
-.comment-input { width:calc(100% - 80px); padding:6px; box-sizing:border-box; }
-.comment-send { padding:6px 8px; margin-left:6px; }
-.small { font-size:12px; color:#666; }
+.comment-input { width:calc(100% - 80px); padding:6px; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; border-radius:4px; }
+.comment-send { padding:6px 8px; margin-left:6px; background:#4B0082; border:1px solid #555; color:#fff; border-radius:4px; cursor:pointer; }
+.small { font-size:12px; color:#aaa; }
+.group-header { font-weight:bold; margin-bottom:6px; color:#DA70D6; text-align:left; }
 @media (max-width:800px){ .media-grid { grid-template-columns:repeat(2,1fr); } }
 @media (max-width:420px){ .media-grid { grid-template-columns:repeat(1,1fr); } }
 </style>
@@ -48,23 +49,13 @@ button.primary { background:#ff4500; color:#fff; border-color:#ff4500; }
     <input id="input-password" type="password" placeholder="6 ký tự, chỉ chữ/số">
     <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
       <input id="toggle-pass" type="checkbox"><label for="toggle-pass" class="small">Hiện mật khẩu</label>
-      <span class="small" style="margin-left:auto; color:#666">Phân biệt hoa/thường</span>
+      <span class="small" style="margin-left:auto; color:#aaa">Phân biệt hoa/thường</span>
     </div>
     <div id="auth-actions">
       <button id="btn-login" class="primary" onclick="handleLogin()">Đăng nhập</button>
       <button id="btn-register" onclick="handleRegister()">Tạo tài khoản</button>
     </div>
     <p class="small">Mật khẩu đúng 6 ký tự, chỉ gồm chữ và số.</p>
-  </div>
-
-  <div id="upload-form">
-    <h3>Upload / Thư viện (chỉ chủ sở hữu)</h3>
-    <input id="file-input" type="file" accept="image/*,video/*">
-    <div style="display:flex; gap:8px; margin-top:8px;">
-      <button class="primary" onclick="uploadMedia()">Upload</button>
-      <button onclick="openOwnerLibrary()">Mở thư viện của tôi</button>
-    </div>
-    <p class="small">Sau khi upload, media sẽ xuất hiện trong tab Video hoặc Ảnh. Hot Trend xét tiêu chí (≤30 ngày & điểm hot).</p>
   </div>
 
   <div class="tabs" id="tabs-container">
@@ -77,10 +68,11 @@ button.primary { background:#ff4500; color:#fff; border-color:#ff4500; }
   <div id="video" class="content"><div id="video-grid" class="media-grid"></div></div>
   <div id="image" class="content"><div id="image-grid" class="media-grid"></div></div>
 
-  <div id="owner-library" style="display:none; margin-top:10px;">
-    <h3>Thư viện của bạn</h3>
-    <div id="owner-grid" class="media-grid"></div>
-    <div style="margin-top:8px;"><button onclick="closeOwnerLibrary()">Đóng</button></div>
+  <div id="owner-tab" class="content" style="display:none;">
+    <h3>Upload / Thư viện của bạn</h3>
+    <input id="file-input" type="file" accept="image/*,video/*" multiple>
+    <button class="primary" style="margin-top:6px;" onclick="uploadMedia()">Upload</button>
+    <div id="owner-grid" class="media-grid" style="margin-top:10px;"></div>
   </div>
 
 </div>
@@ -88,7 +80,7 @@ button.primary { background:#ff4500; color:#fff; border-color:#ff4500; }
 <script>
 // ===== Cấu hình & dữ liệu =====
 let currentUser = null;
-let mediaList = []; // {id, type:'video'|'image', url, date, likes, comments[], views}
+let mediaGroups = []; 
 const OWNER_INFO = {name:'YINKCID', email:'yinkcid@gmail.com', password:'213206'};
 const USERS_KEY = 'yinkcid_users';
 const OWNER_KEY = 'yinkcid_owner';
@@ -115,9 +107,8 @@ function handleRegister(){
   let users=getUsers();
   if(users.find(u=>u.email.toLowerCase()===email.toLowerCase())){alert('Email đã tồn tại'); return;}
   
-  // Kiểm tra có phải thông tin chủ sở hữu
   let isOwner = (name===OWNER_INFO.name && email===OWNER_INFO.email && password===OWNER_INFO.password);
-  if(isOwner && !getOwnerEmail()){ setOwnerEmail(email); alert('Bạn đã được gán làm chủ sở hữu của trang!'); }
+  if(isOwner && !getOwnerEmail()){ setOwnerEmail(email); alert('Bạn đã được gán làm chủ sở hữu của trang!'); addOwnerTab(); }
 
   users.push({name,email,password});
   saveUsers(users);
@@ -135,9 +126,8 @@ function handleLogin(){
   currentUser=user;
   alert('Đăng nhập thành công!');
   if(email===OWNER_INFO.email && password===OWNER_INFO.password && name===OWNER_INFO.name){ 
-    setOwnerEmail(email); 
-    document.getElementById('upload-form').style.display='block';
-  } else { document.getElementById('upload-form').style.display='none'; }
+    setOwnerEmail(email); addOwnerTab();
+  } 
 }
 
 // ===== Tabs =====
@@ -147,76 +137,110 @@ function switchTab(e,tab){
   e.target.classList.add('active'); document.getElementById(tab).classList.add('active');
 }
 
+// ===== Add Owner Tab =====
+function addOwnerTab(){
+  if(document.querySelector('.tab[data-tab="owner"]')) return;
+  const tab=document.createElement('div'); tab.className='tab'; tab.dataset.tab='owner';
+  tab.innerText='Upload / Thư viện'; tab.onclick=(e)=>switchTab(e,'owner-tab');
+  document.getElementById('tabs-container').appendChild(tab);
+  document.getElementById('owner-tab').style.display='block';
+  renderOwnerGrid();
+}
+
 // ===== Upload =====
 function uploadMedia(){
-  const file=document.getElementById('file-input').files[0];
-  if(!file){ alert('Chọn file để upload'); return;}
-  const type = file.type.startsWith('video')?'video':'image';
-  const url=URL.createObjectURL(file);
-  const date=new Date().toISOString();
-  const media={id:Date.now(), type,url,date,likes:0,comments:[],views:0};
-  mediaList.push(media);
-  renderMedia();
+  const files=document.getElementById('file-input').files;
+  if(!files.length){ alert('Chọn file để upload'); return;}
+  const timestamp=Date.now();
+  const newGroup={timestamp,media:[]};
+  Array.from(files).forEach(file=>{
+    const type=file.type.startsWith('video')?'video':'image';
+    const url=URL.createObjectURL(file);
+    const date=new Date().toISOString();
+    newGroup.media.push({id:Date.now()+Math.random(),type,url,date,likes:0,comments:[],views:0});
+  });
+  mediaGroups.push(newGroup);
+  renderAllGrids();
+  renderOwnerGrid();
   alert('Upload thành công!');
 }
 
-// ===== Render Media =====
-function renderMedia(){
-  const videoGrid=document.getElementById('video-grid');
-  const imageGrid=document.getElementById('image-grid');
-  const hotGrid=document.getElementById('hot-grid');
-  videoGrid.innerHTML=''; imageGrid.innerHTML=''; hotGrid.innerHTML='';
-
-  let now=new Date();
-  mediaList.forEach(m=>{
-    const card=document.createElement('div'); card.className='card';
-    let inner='';
-    if(m.type==='image'){ inner=`<img src="${m.url}">`; }
-    else{ inner=`<video src="${m.url}" controls></video>`; }
-    inner+=`<div class="info">Ngày: ${new Date(m.date).toLocaleDateString()}<br>
-      <span class="interactive" onclick="likeMedia(${m.id})">❤ ${m.likes}</span>
-      <span class="interactive" onclick="showComment(${m.id})">💬 ${m.comments.length}</span>
-      <span>👁️ ${m.views}</span></div>
-      <div class="comment-section" id="comment-${m.id}"></div>`;
-    card.innerHTML=inner;
-    card.onclick=()=>{ alert('Bạn có thể xem / chuyển giữa chừng sang media khác.'); m.views++; renderMedia();}
-    if(m.type==='video') videoGrid.appendChild(card);
-    else imageGrid.appendChild(card);
-    // Hot Trend: ≤30 ngày
-    const diff=(now-new Date(m.date))/(1000*60*60*24);
-    if(diff<=30){ hotGrid.appendChild(card.cloneNode(true)); }
+// ===== Render Grids =====
+function renderAllGrids(){ renderMediaGrid('video'); renderMediaGrid('image'); renderHotTrend(); }
+function renderMediaGrid(type){
+  const grid=document.getElementById(type==='video'?'video-grid':'image-grid');
+  grid.innerHTML='';
+  mediaGroups.forEach(group=>{
+    group.media.filter(m=>m.type===type).forEach(m=>{
+      const card=createCard(m); grid.appendChild(card);
+    });
   });
+}
+function renderHotTrend(){
+  const grid=document.getElementById('hot-grid'); grid.innerHTML='';
+  const now=new Date();
+  mediaGroups.forEach(group=>{
+    group.media.forEach(m=>{
+      const diff=(now-new Date(m.date))/(1000*60*60*24);
+      const score=m.likes+m.comments.length+m.views;
+      if(diff<=30 && score>0){ grid.appendChild(createCard(m)); }
+    });
+  });
+}
+function renderOwnerGrid(){
+  const grid=document.getElementById('owner-grid'); grid.innerHTML='';
+  mediaGroups.forEach(group=>{
+    const div=document.createElement('div'); div.className='card';
+    const header=document.createElement('div'); header.className='group-header';
+    header.innerText='Tin đăng lúc '+new Date(group.timestamp).toLocaleString();
+    div.appendChild(header);
+    group.media.forEach(m=>{
+      const card=createCard(m); div.appendChild(card);
+    });
+    grid.appendChild(div);
+  });
+}
+
+// ===== Card Media =====
+function createCard(m){
+  const card=document.createElement('div'); card.className='card';
+  let inner='';
+  if(m.type==='image'){ inner=`<img src="${m.url}">`; }
+  else{ inner=`<video src="${m.url}" controls></video>`; }
+  inner+=`<div class="info">Ngày: ${new Date(m.date).toLocaleDateString()}<br>
+    <span class="interactive" onclick="likeMedia(${m.id})">❤ ${m.likes}</span>
+    <span class="interactive" onclick="showComment(${m.id})">💬 ${m.comments.length}</span>
+    <span>👁️ ${m.views}</span></div>
+    <div class="comment-section" id="comment-${m.id}"></div>`;
+  card.innerHTML=inner;
+  card.onclick=()=>{ m.views++; renderAllGrids(); };
+  return card;
 }
 
 // ===== Like & Comment =====
-function likeMedia(id){ const m=mediaList.find(x=>x.id===id); m.likes++; renderMedia();}
+function likeMedia(id){ 
+  mediaGroups.forEach(g=>{ g.media.forEach(m=>{ if(m.id===id){m.likes++;} }) });
+  renderAllGrids();
+}
 function showComment(id){
-  const m=mediaList.find(x=>x.id===id);
-  const sec=document.getElementById('comment-'+id);
-  sec.style.display=sec.style.display==='none'?'block':'none';
-  sec.innerHTML=`<input class="comment-input" placeholder="Nhập bình luận"><button class="comment-send" onclick="addComment(${id})">Gửi</button>
-    <div>${m.comments.map(c=>`<div>${c}</div>`).join('')}</div>`;
+  mediaGroups.forEach(g=>{ g.media.forEach(m=>{
+    if(m.id===id){
+      const sec=document.getElementById('comment-'+id); sec.style.display=sec.style.display==='none'?'block':'none';
+      sec.innerHTML=`<input class="comment-input" placeholder="Nhập bình luận">
+      <button class="comment-send" onclick="addComment(${id})">Gửi</button>
+      <div>${m.comments.map(c=>`<div>${c}</div>`).join('')}</div>`;
+    }
+  }) });
 }
 function addComment(id){
-  const sec=document.getElementById('comment-'+id);
-  const inp=sec.querySelector('.comment-input');
-  if(inp.value.trim()!==''){
-    const m=mediaList.find(x=>x.id===id); m.comments.push(inp.value.trim()); inp.value=''; showComment(id); 
-  }
+  mediaGroups.forEach(g=>{ g.media.forEach(m=>{
+    if(m.id===id){
+      const sec=document.getElementById('comment-'+id);
+      const inp=sec.querySelector('.comment-input');
+      if(inp.value.trim()!==''){ m.comments.push(inp.value.trim()); inp.value=''; showComment(id); }
+    }
+  }) });
 }
-
-// ===== Thư viện owner =====
-function openOwnerLibrary(){
-  document.getElementById('owner-library').style.display='block';
-  const grid=document.getElementById('owner-grid'); grid.innerHTML='';
-  mediaList.forEach(m=>{
-    const card=document.createElement('div'); card.className='card';
-    card.innerHTML=m.type==='image'?`<img src="${m.url}">`:`<video src="${m.url}" controls></video>`;
-    grid.appendChild(card);
-  });
-}
-function closeOwnerLibrary(){ document.getElementById('owner-library').style.display='none'; }
-
 </script>
 </body>
 </html>
