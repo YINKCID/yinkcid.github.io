@@ -5,18 +5,25 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>YINKCID</title>
 <style>
-body { font-family: Arial; margin:0; padding:0; background:#000; color:#fff; text-align:center; }
+/* ===== Nền & chữ ===== */
+body { font-family: Arial, sans-serif; margin:0; padding:0; background:#000; color:#fff; text-align:center; }
 header { background:#4B0082; color:#fff; padding:12px; font-size:22px; font-weight:bold; }
 .message { color:#DA70D6; font-weight:bold; font-size:18px; margin:6px 0; }
 .container { padding:12px; }
+
+/* ===== Ô đăng nhập & tạo tài khoản ===== */
 #auth-box, #upload-form { background:#111; width:340px; margin:10px auto; padding:12px; border-radius:8px; box-shadow:0 0 6px #444; text-align:left; }
-#auth-box input, #upload-form input { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; border-radius:4px; }
+#auth-box input, #upload-form input { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; background:#222; color:#fff; border:1px solid #4B0082; border-radius:4px; }
 #auth-actions { display:flex; gap:8px; justify-content:center; margin-top:6px; }
-button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #555; background:#4B0082; color:#fff; }
+button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #4B0082; background:#4B0082; color:#fff; font-weight:bold; }
 button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
+
+/* ===== Tabs ===== */
 .tabs { display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
-.tab { padding:8px 16px; background:#222; border-radius:6px; border:1px solid #555; cursor:pointer; }
+.tab { padding:8px 16px; background:#222; border-radius:6px; border:1px solid #4B0082; cursor:pointer; color:#fff; }
 .tab.active { background:#4B0082; color:#fff; font-weight:bold; border-color:#4B0082; }
+
+/* ===== Nội dung ===== */
 .content { display:none; padding:10px; }
 .content.active { display:block; }
 .media-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:10px; }
@@ -25,10 +32,12 @@ button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
 .info { font-size:13px; margin-top:6px; color:#ccc; }
 .interactive { color:#DA70D6; cursor:pointer; margin-right:8px; }
 .comment-section { margin-top:6px; display:none; }
-.comment-input { width:calc(100% - 80px); padding:6px; box-sizing:border-box; background:#222; color:#fff; border:1px solid #555; border-radius:4px; }
-.comment-send { padding:6px 8px; margin-left:6px; background:#4B0082; border:1px solid #555; color:#fff; border-radius:4px; cursor:pointer; }
+.comment-input { width:calc(100% - 80px); padding:6px; box-sizing:border-box; background:#222; color:#fff; border:1px solid #4B0082; border-radius:4px; }
+.comment-send { padding:6px 8px; margin-left:6px; background:#4B0082; border:1px solid #4B0082; color:#fff; border-radius:4px; cursor:pointer; }
 .small { font-size:12px; color:#aaa; }
 .group-header { font-weight:bold; margin-bottom:6px; color:#DA70D6; text-align:left; }
+
+/* ===== Responsive ===== */
 @media (max-width:800px){ .media-grid { grid-template-columns:repeat(2,1fr); } }
 @media (max-width:420px){ .media-grid { grid-template-columns:repeat(1,1fr); } }
 </style>
@@ -70,7 +79,7 @@ button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
 
   <div id="owner-tab" class="content" style="display:none;">
     <h3>Upload / Thư viện của bạn</h3>
-    <input id="file-input" type="file" accept="image/*,video/*" multiple>
+    <input id="file-input" type="file" accept="image/*,video/*" multiple style="border:1px solid #4B0082; background:#222; color:#fff;">
     <button class="primary" style="margin-top:6px;" onclick="uploadMedia()">Upload</button>
     <div id="owner-grid" class="media-grid" style="margin-top:10px;"></div>
   </div>
