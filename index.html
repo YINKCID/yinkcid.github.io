@@ -43,7 +43,7 @@ button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #
 </head>
 <body>
 <header>Chào mừng đến với YINKCID!</header>
-<div class="message">Các bạn nhớ đăng ký kênh để ủng hộ kênh của mình nhé!</div>
+<div class="message" id="channel-msg">Các bạn nhớ đăng ký kênh để ủng hộ kênh của mình nhé!</div>
 
 <div class="container">
 
@@ -51,11 +51,14 @@ button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #
   <div id="auth-box">
     <h3>Đăng nhập / Tạo tài khoản</h3>
     <label>Tên</label>
-    <input id="input-name" type="text" placeholder="Tên (bắt buộc)">
+    <!-- tắt auto-capitalize để tránh mobile thay đổi hoa/thường -->
+    <input id="input-name" type="text" placeholder="Tên (bắt buộc)" autocapitalize="none" autocomplete="name" spellcheck="false" autofocus>
     <label>Email</label>
-    <input id="input-email" type="email" placeholder="Email (bắt buộc)">
+    <input id="input-email" type="email" placeholder="Email (bắt buộc)" autocapitalize="none" autocomplete="email" spellcheck="false">
     <label>Mật khẩu</label>
-    <input id="input-password" type="password" placeholder="6 ký tự, chữ/số">
+    <!-- Đặt 2 input: 1 password, 1 text (để swap) -->
+    <input id="input-password-pw" type="password" placeholder="6 ký tự, chữ/số" autocomplete="current-password" autocorrect="off" autocapitalize="none" spellcheck="false">
+    <input id="input-password-txt" type="text" placeholder="6 ký tự, chữ/số" style="display:none;" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
     <div style="display:flex; align-items:center; gap:8px; margin-top:6px;">
       <input id="toggle-pass" type="checkbox"><label for="toggle-pass" class="small">Hiện mật khẩu</label>
       <span class="small" style="margin-left:auto; color:#aaa">Phân biệt hoa/thường</span>
@@ -93,60 +96,101 @@ button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #
 let currentUser = null;
 let mediaGroups = JSON.parse(localStorage.getItem('mediaGroups')||'[]'); 
 let ownerLibrary = JSON.parse(localStorage.getItem('ownerLibrary')||'[]'); 
+
+// Chuẩn thông tin chủ: viết hoa/viết thường không quan trọng
 const OWNER_INFO = {name:'YINKCID', email:'yinkcid@gmail.com', password:'213206'};
 const USERS_KEY = 'yinkcid_users';
 const OWNER_KEY = 'yinkcid_owner';
 
+// Helpers lưu/đọc
 function saveMedia(){
   localStorage.setItem('mediaGroups', JSON.stringify(mediaGroups));
   localStorage.setItem('ownerLibrary', JSON.stringify(ownerLibrary));
 }
-
 function getUsers(){ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }
 function saveUsers(users){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
 
-function checkOwner(user){
-    return user.name === OWNER_INFO.name &&
-           user.email === OWNER_INFO.email &&
-           user.password === OWNER_INFO.password;
+// so sánh case-insensitive cho tên và email
+function isOwnerByFields(name, email, password){
+    return name.trim().toLowerCase() === OWNER_INFO.name.toLowerCase()
+        && email.trim().toLowerCase() === OWNER_INFO.email.toLowerCase()
+        && password === OWNER_INFO.password;
 }
 
-// --- Hiện/ẩn mật khẩu hoạt động cả điện thoại ---
-document.getElementById('toggle-pass').addEventListener('change', ()=>{
-  const inp=document.getElementById('input-password');
-  inp.type = inp.type==='password'?'text':'password';
+// --- Toggle mật khẩu (swap inputs - an toàn trên mobile) ---
+const pwBox = document.getElementById('input-password-pw');
+const txtBox = document.getElementById('input-password-txt');
+const toggle = document.getElementById('toggle-pass');
+
+toggle.addEventListener('change', ()=>{
+  if(toggle.checked){
+    // show text input
+    txtBox.value = pwBox.value;
+    pwBox.style.display = 'none';
+    txtBox.style.display = 'block';
+    txtBox.focus();
+  } else {
+    // show password input
+    pwBox.value = txtBox.value;
+    txtBox.style.display = 'none';
+    pwBox.style.display = 'block';
+    pwBox.focus();
+  }
 });
+
+// keep values in sync while typing (both directions)
+pwBox.addEventListener('input', ()=>{ if(!toggle.checked) txtBox.value = pwBox.value; });
+txtBox.addEventListener('input', ()=>{ if(toggle.checked) pwBox.value = txtBox.value; });
 
 // --- Đăng ký ---
 function handleRegister(){
-  const name=document.getElementById('input-name').value.trim();
-  const email=document.getElementById('input-email').value.trim();
-  const password=document.getElementById('input-password').value.trim();
+  const name = document.getElementById('input-name').value.trim();
+  const email = document.getElementById('input-email').value.trim();
+  // lấy giá trị mật khẩu từ input hiện tại
+  const password = (toggle.checked ? txtBox.value : pwBox.value).trim();
   if(!name || !email || !password){ alert('Vui lòng điền đủ thông tin'); return; }
   if(!/^[a-zA-Z0-9]{6}$/.test(password)){ alert('Mật khẩu phải 6 ký tự chữ hoặc số'); return; }
   let users = getUsers();
-  if(users.find(u=>u.email===email)){ alert('Email đã tồn tại, vui lòng đăng nhập'); return; }
-  let user = {name,email,password};
+  // so sánh email không phân biệt hoa/thường
+  if(users.find(u=>u.email.trim().toLowerCase()===email.toLowerCase())){ alert('Email đã tồn tại, vui lòng đăng nhập'); return; }
+  let user = {name:name, email:email, password:password};
   users.push(user);
   saveUsers(users);
   currentUser = user;
-  if(checkOwner(user)){
+  // nếu là owner (so sánh không phân biệt hoa/thường)
+  if(isOwnerByFields(name,email,password)){
       showOwnerTab();
-      localStorage.setItem(OWNER_KEY,email);
+      localStorage.setItem(OWNER_KEY,email.toLowerCase());
   }
   alert('Tạo tài khoản thành công!');
 }
 
 // --- Đăng nhập ---
 function handleLogin(){
-  const name=document.getElementById('input-name').value.trim();
-  const email=document.getElementById('input-email').value.trim();
-  const password=document.getElementById('input-password').value.trim();
+  const name = document.getElementById('input-name').value.trim();
+  const email = document.getElementById('input-email').value.trim();
+  const password = (toggle.checked ? txtBox.value : pwBox.value).trim();
   let users = getUsers();
-  let user = users.find(u=>u.email===email && u.password===password && u.name===name);
-  if(!user){ alert('Thông tin đăng nhập không đúng'); return; }
-  currentUser=user;
-  if(checkOwner(user)){ showOwnerTab(); }
+  // tìm user theo email (không phân biệt hoa/thường) và password
+  let user = users.find(u => u.email.trim().toLowerCase()===email.toLowerCase() && u.password===password);
+  if(!user){
+    // cũng kiểm tra nếu là owner thông tin trực tiếp (chưa lưu vào users)
+    if(isOwnerByFields(name,email,password)){
+      // tạo entry owner tạm thời trong users để có thể lưu
+      let users2 = users.slice();
+      const ownerEntry = {name:OWNER_INFO.name, email:OWNER_INFO.email, password:OWNER_INFO.password};
+      users2.push(ownerEntry);
+      saveUsers(users2);
+      currentUser = ownerEntry;
+      showOwnerTab();
+      alert('Đăng nhập thành công (chủ sở hữu)!');
+      return;
+    }
+    alert('Thông tin đăng nhập không đúng'); return;
+  }
+  // nếu user có nhập tên khác kiểu hoa/thường thì không quá quan trọng, nhưng ta vẫn check owner
+  currentUser = user;
+  if(isOwnerByFields(name,email,password)) showOwnerTab();
   alert('Đăng nhập thành công!');
 }
 
@@ -166,9 +210,15 @@ function showOwnerTab(){
 // --- Chuyển tab ---
 function switchTab(e,tabId){
     document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    e.currentTarget.classList.add('active');
+    // nếu e có currentTarget (nếu gọi từ JS, e có thể là undefined) -> xử lý an toàn
+    if(e && e.currentTarget) e.currentTarget.classList.add('active');
+    else {
+      const btn = document.querySelector('.tab[data-tab="'+tabId+'"]');
+      if(btn) btn.classList.add('active');
+    }
     document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+    const el = document.getElementById(tabId);
+    if(el) el.classList.add('active');
 }
 
 // --- Upload media ---
@@ -195,8 +245,8 @@ function renderAllGrids(){
     const imageGrid=document.getElementById('image-grid');
     hotGrid.innerHTML=''; videoGrid.innerHTML=''; imageGrid.innerHTML='';
     let now = Date.now();
-    // Hot Trend
-    mediaGroups.filter(m=>now-m.timestamp<=30*24*60*60*1000) // <30 ngày
+    // Hot Trend (trong 30 ngày) sắp xếp theo likes+comments+views
+    mediaGroups.filter(m=>now-m.timestamp<=30*24*60*60*1000)
                .sort((a,b)=>(b.likes+b.comments.length+b.views)-(a.likes+a.comments.length+a.views))
                .forEach(m=>{
         m.files.forEach(f=>{
@@ -225,7 +275,14 @@ function renderAllGrids(){
 }
 
 // --- Load dữ liệu khi mở web ---
-window.onload=()=>{ renderAllGrids(); }
+window.onload=()=>{ 
+  // nếu trước đó đã đăng nhập owner, tự hiện tab owner
+  const ownerSaved = localStorage.getItem(OWNER_KEY);
+  if(ownerSaved && ownerSaved.toLowerCase() === OWNER_INFO.email.toLowerCase()){
+    showOwnerTab();
+  }
+  renderAllGrids(); 
+}
 </script>
 </body>
 </html>
