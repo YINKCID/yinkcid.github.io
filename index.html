@@ -10,18 +10,17 @@ body {
 }
 header {
   background:linear-gradient(90deg,#4B0082,#8A2BE2); color:#fff; padding:16px; font-size:26px; font-weight:bold;
-  text-align:center; box-shadow:0 2px 8px #111;
+  box-shadow:0 2px 8px #111;
 }
 .message {
   background:#222; padding:10px; border-left:4px solid #DA70D6; font-weight:bold; color:#DA70D6;
   margin:10px auto; width:fit-content;
 }
 .container { padding:12px; }
-#auth-box, #upload-form { background:#111; width:340px; margin:10px auto; padding:12px; border-radius:8px; box-shadow:0 0 6px #444; text-align:left; }
+#auth-box, #upload-form { background:#111; width:90%; max-width:360px; margin:10px auto; padding:12px; border-radius:8px; box-shadow:0 0 6px #444; text-align:left; }
 #auth-box input, #upload-form input { width:100%; padding:8px; margin:6px 0; box-sizing:border-box; background:#222; color:#fff; border:1px solid #4B0082; border-radius:4px; }
-#auth-actions { display:flex; gap:8px; justify-content:center; margin-top:6px; }
+#auth-actions { display:flex; gap:8px; justify-content:center; margin-top:6px; flex-wrap:wrap; }
 button { padding:8px 12px; cursor:pointer; border-radius:6px; border:1px solid #4B0082; background:#4B0082; color:#fff; font-weight:bold; }
-button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
 .tabs { display:flex; justify-content:center; gap:8px; margin:10px 0; flex-wrap:wrap; }
 .tab { padding:8px 16px; background:#222; border-radius:6px; border:1px solid #4B0082; cursor:pointer; color:#fff; }
 .tab.active { background:#4B0082; color:#fff; font-weight:bold; border-color:#4B0082; }
@@ -90,9 +89,9 @@ button.primary { background:#4B0082; color:#fff; border-color:#4B0082; }
 </div>
 
 <script>
-// --- Cấu hình & lưu trữ ---
+// --- Lưu trữ ---
 let currentUser = null;
-let mediaGroups = JSON.parse(localStorage.getItem('mediaGroups')||'[]'); // Lưu trữ media trên localStorage
+let mediaGroups = JSON.parse(localStorage.getItem('mediaGroups')||'[]'); 
 let ownerLibrary = JSON.parse(localStorage.getItem('ownerLibrary')||'[]'); 
 const OWNER_INFO = {name:'YINKCID', email:'yinkcid@gmail.com', password:'213206'};
 const USERS_KEY = 'yinkcid_users';
@@ -105,11 +104,14 @@ function saveMedia(){
 
 function getUsers(){ return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); }
 function saveUsers(users){ localStorage.setItem(USERS_KEY, JSON.stringify(users)); }
-function getOwnerEmail(){ return localStorage.getItem(OWNER_KEY)||null; }
-function setOwnerEmail(email){ localStorage.setItem(OWNER_KEY,email); }
-function isValidPassword(pw){ return /^[a-zA-Z0-9]{6}$/.test(pw); }
 
-// Show/Hide pass
+function checkOwner(user){
+    return user.name === OWNER_INFO.name &&
+           user.email === OWNER_INFO.email &&
+           user.password === OWNER_INFO.password;
+}
+
+// --- Hiện/ẩn mật khẩu hoạt động cả điện thoại ---
 document.getElementById('toggle-pass').addEventListener('change', ()=>{
   const inp=document.getElementById('input-password');
   inp.type = inp.type==='password'?'text':'password';
@@ -117,4 +119,113 @@ document.getElementById('toggle-pass').addEventListener('change', ()=>{
 
 // --- Đăng ký ---
 function handleRegister(){
-  const name=document.getElementById('
+  const name=document.getElementById('input-name').value.trim();
+  const email=document.getElementById('input-email').value.trim();
+  const password=document.getElementById('input-password').value.trim();
+  if(!name || !email || !password){ alert('Vui lòng điền đủ thông tin'); return; }
+  if(!/^[a-zA-Z0-9]{6}$/.test(password)){ alert('Mật khẩu phải 6 ký tự chữ hoặc số'); return; }
+  let users = getUsers();
+  if(users.find(u=>u.email===email)){ alert('Email đã tồn tại, vui lòng đăng nhập'); return; }
+  let user = {name,email,password};
+  users.push(user);
+  saveUsers(users);
+  currentUser = user;
+  if(checkOwner(user)){
+      showOwnerTab();
+      localStorage.setItem(OWNER_KEY,email);
+  }
+  alert('Tạo tài khoản thành công!');
+}
+
+// --- Đăng nhập ---
+function handleLogin(){
+  const name=document.getElementById('input-name').value.trim();
+  const email=document.getElementById('input-email').value.trim();
+  const password=document.getElementById('input-password').value.trim();
+  let users = getUsers();
+  let user = users.find(u=>u.email===email && u.password===password && u.name===name);
+  if(!user){ alert('Thông tin đăng nhập không đúng'); return; }
+  currentUser=user;
+  if(checkOwner(user)){ showOwnerTab(); }
+  alert('Đăng nhập thành công!');
+}
+
+// --- Hiển thị Owner Tab ---
+function showOwnerTab(){
+    document.getElementById('owner-tab').style.display='block';
+    if(!document.querySelector('.tab[data-tab="owner"]')){
+        const ownerTabBtn=document.createElement('div');
+        ownerTabBtn.className='tab';
+        ownerTabBtn.dataset.tab='owner';
+        ownerTabBtn.textContent='Upload';
+        ownerTabBtn.onclick=(e)=>switchTab(e,'owner');
+        document.getElementById('tabs-container').appendChild(ownerTabBtn);
+    }
+}
+
+// --- Chuyển tab ---
+function switchTab(e,tabId){
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    e.currentTarget.classList.add('active');
+    document.querySelectorAll('.content').forEach(c=>c.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+}
+
+// --- Upload media ---
+function uploadMedia(){
+    const files = document.getElementById('file-input').files;
+    if(files.length===0){ alert('Chọn file để upload'); return; }
+    const timestamp=Date.now();
+    let mediaItem={timestamp,files:[],likes:0,comments:[],views:0};
+    for(let f of files){
+        const url = URL.createObjectURL(f);
+        mediaItem.files.push({name:f.name,type:f.type,url});
+    }
+    mediaGroups.push(mediaItem);
+    ownerLibrary.push(mediaItem);
+    saveMedia();
+    renderAllGrids();
+    alert('Upload thành công!');
+}
+
+// --- Render tất cả tab ---
+function renderAllGrids(){
+    const hotGrid=document.getElementById('hot-grid');
+    const videoGrid=document.getElementById('video-grid');
+    const imageGrid=document.getElementById('image-grid');
+    hotGrid.innerHTML=''; videoGrid.innerHTML=''; imageGrid.innerHTML='';
+    let now = Date.now();
+    // Hot Trend
+    mediaGroups.filter(m=>now-m.timestamp<=30*24*60*60*1000) // <30 ngày
+               .sort((a,b)=>(b.likes+b.comments.length+b.views)-(a.likes+a.comments.length+a.views))
+               .forEach(m=>{
+        m.files.forEach(f=>{
+            const card=document.createElement('div'); card.className='card';
+            if(f.type.startsWith('image')) card.innerHTML=`<img src="${f.url}"><div class="info small">${f.name}</div>`;
+            else card.innerHTML=`<video src="${f.url}" controls></video><div class="info small">${f.name}</div>`;
+            hotGrid.appendChild(card);
+        });
+    });
+    // Video
+    mediaGroups.forEach(m=>{
+        m.files.filter(f=>f.type.startsWith('video')).forEach(f=>{
+            const card=document.createElement('div'); card.className='card';
+            card.innerHTML=`<video src="${f.url}" controls></video><div class="info small">${f.name}</div>`;
+            videoGrid.appendChild(card);
+        });
+    });
+    // Image
+    mediaGroups.forEach(m=>{
+        m.files.filter(f=>f.type.startsWith('image')).forEach(f=>{
+            const card=document.createElement('div'); card.className='card';
+            card.innerHTML=`<img src="${f.url}"><div class="info small">${f.name}</div>`;
+            imageGrid.appendChild(card);
+        });
+    });
+}
+
+// --- Load dữ liệu khi mở web ---
+window.onload=()=>{ renderAllGrids(); }
+</script>
+</body>
+</html>
